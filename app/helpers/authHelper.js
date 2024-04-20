@@ -29,7 +29,7 @@ const generateRefreshToken = () => {
 }
 
 const replaceDbRefreshToken = (tokenId, userId) => {
-    Token.findOne({ userId })
+    Token.findOneAndDelete({ userId })
         .exec()
         .then(() => Token.create({ tokenId, userId }));
 }

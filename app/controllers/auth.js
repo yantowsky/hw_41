@@ -6,15 +6,14 @@ const { secret } = require('../../config/app').jwt;
 const User = mongoose.model('User');
 const Token = mongoose.model('Token');
 
-const updateTokens = (userId) => {
+const updateTokens = async (userId) => {
     const accessToken = authHelper.generateAccessToken(userId);
     const refreshToken = authHelper.generateRefreshToken();
-
-    return authHelper.replaceDbRefreshToken(refreshToken.id, userId)
-        .then(() => ({
-            accessToken,
-            refreshToken: refreshToken.token,
-        }));
+    authHelper.replaceDbRefreshToken(refreshToken.id, userId);
+    return {
+        accessToken,
+        refreshToken: refreshToken.token,
+    }
 }
 
 const login = (req, res) => {
@@ -28,9 +27,10 @@ const login = (req, res) => {
             }
 
             if (password == user.password) {
-                updateTokens(user._id).then(token => res.json(token));
+                updateTokens(user._id).then(tokens => res.json(tokens));
             } else {
                 res.status(401).json({ message: 'Invalid credentials!' });
+                return;
             }
         })
         .catch(err => res.status(500).json({ message: err.message }));
@@ -63,7 +63,7 @@ const refreshTokens = (req, res) => {
             }
             return updateTokens(token.userId);
         })
-        .then(token => res.json(token))
+        .then(tokens => res.json(tokens))
         .catch(err => res.status(400).json({ message: err.message }));
 }
 
